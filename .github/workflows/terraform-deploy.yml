@@ -1,0 +1,41 @@
+---
+name: Terraform Deploy
+
+env:
+  # Terraform environment variables
+  TF_CLI_ARGS_init: "-get=true -upgrade=true -input=false -no-color"
+  TF_CLI_ARGS_plan: "-input=false -no-color"
+  TF_CLI_ARGS_apply: "-input=false -no-color"
+  TF_IN_AUTOMATION: true
+
+on:
+  workflow_call:
+    inputs:
+      terraform_version:
+        required: false
+        type: string
+        default: latest
+      environment:
+        required: false
+        type: string
+        default: development
+jobs:
+  terraform-deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: hashicorp/setup-terraform@v1
+        with:
+            terraform_version: ${{ inputs.terraform_version }}
+      - name: Terraform Init
+        id: init
+        run: terraform init
+      - name: Download terraform.tfplan
+        uses: actions/download-artifact@v2
+        with:
+          name: terraform-plan-${{ inputs.environment }}
+      - name: Terraform Deploy
+        id: deploy
+        run: terraform apply -input=false terraform.tfplan

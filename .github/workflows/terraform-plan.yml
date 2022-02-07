@@ -23,6 +23,10 @@ on:
         required: false
         type: boolean
         default: false
+      save_plan:
+        required: false
+        type: boolean
+        default: false
     outputs:
       terraform_plan:
         description: Terraform Plan
@@ -57,8 +61,15 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan
+        run: terraform plan -input=false -no-color out terraform.tfplan"
         continue-on-error: true
+
+      - name: Save terraform.tfplan
+        if: ${{ inputs.save_plan == true }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: terraform-plan-${{ inputs.environment }}
+          path: terraform.tfplan
 
       - uses: actions/github-script@v5
         if: ${{ inputs.post_comment == true }}
