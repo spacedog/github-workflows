@@ -21,6 +21,7 @@ on:
         default: development
 jobs:
   terraform-deploy:
+    name: Terraform Deploy
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
     steps:
