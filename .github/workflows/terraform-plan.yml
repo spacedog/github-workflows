@@ -90,7 +90,7 @@ jobs:
 
       - name: Terraform Init - AWS S3 backend
         if: ${{ inputs.is_aws_backend }}
-        id: init
+        id: init_aws
         run: >-
           terraform init -get=true
           -upgrade=true
@@ -101,7 +101,7 @@ jobs:
           -backend-config="dynamodb_table=${{ inputs.state_dynamodb }}"
 
       - name: Terraform Init
-        id: init
+        id: init_fallback
         if: ${{ !inputs.is_aws_backend }}
         run: >-
           terraform init -get=true
