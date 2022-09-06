@@ -100,7 +100,7 @@ jobs:
           -backend-config="bucket=${{ inputs.state_bucket }}"
           -backend-config="dynamodb_table=${{ inputs.state_dynamodb }}"
 
-      - name: Terraform Init
+      - name: Terraform Init - fallback (no backend parameters)
         id: init_fallback
         if: ${{ !inputs.is_aws_backend }}
         run: >-
