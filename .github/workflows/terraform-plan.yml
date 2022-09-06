@@ -10,12 +10,25 @@ env:
 on:
   workflow_call:
     inputs:
+      # Use AWS S3 bucket backend to store terraform state
+      is_aws_backend:
+        required: false
+        type: boolean
+        default: false
+      ## Parameters to configure AWS s3 backend
       state_bucket:
-        required: true
+        required: false
         type: string
+        default: bucket
       state_dynamodb:
-        required: true
+        required: false
         type: string
+        default: dynamodb
+      role_arn:
+        required: false
+        type: string
+        default: role_arn
+      ## end of aws s3 state parameters
       terraform_version:
         required: false
         type: string
@@ -32,10 +45,6 @@ on:
         required: false
         type: boolean
         default: false
-      role_arn:
-        required: false
-        type: string
-        default: role_arn
       tf_workspace:
         required: false
         type: string
@@ -79,7 +88,8 @@ jobs:
         run: terraform fmt -check
         continue-on-error: true
 
-      - name: Terraform Init
+      - name: Terraform Init - AWS S3 backend
+        if: ${{ inputs.is_aws_backend }}
         id: init
         run: >-
           terraform init -get=true
@@ -89,6 +99,15 @@ jobs:
           -backend-config="role_arn=${{ inputs.role_arn }}"
           -backend-config="bucket=${{ inputs.state_bucket }}"
           -backend-config="dynamodb_table=${{ inputs.state_dynamodb }}"
+
+      - name: Terraform Init
+        id: init
+        if: ! ${{ inputs.is_aws_backend }}
+        run: >-
+          terraform init -get=true
+          -upgrade=true
+          -input=false
+          -no-color
 
       - name: Terraform Validate
         id: validate
