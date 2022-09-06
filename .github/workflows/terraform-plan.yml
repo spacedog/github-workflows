@@ -75,7 +75,7 @@ jobs:
       terraform_plan: ${{ steps.plan.outputs.stdout }}
     steps:
       # Mask all secrets
-      - uses: Add masks
+      - name: Add masks
         run: |
           echo "::add-mask::{{ secrets.aws_access_key_id }}
           echo "::add-mask::{{ secrets.aws_secret_access_key }}
