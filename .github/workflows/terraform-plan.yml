@@ -3,7 +3,6 @@ name: Terraform Plan
 
 env:
   # Terraform environment variables
-  TF_CLI_ARGS_init: "-get=true -upgrade=true -input=false -no-color"
   TF_CLI_ARGS_plan: "-input=false -no-color"
   TF_CLI_ARGS_apply: "-input=false -no-color"
   TF_IN_AUTOMATION: true
@@ -11,6 +10,12 @@ env:
 on:
   workflow_call:
     inputs:
+      state_bucket:
+        required: true
+        type: string
+      state_dynamodb:
+        required: true
+        type: string
       terraform_version:
         required: false
         type: string
@@ -27,6 +32,21 @@ on:
         required: false
         type: boolean
         default: false
+      role_arn:
+        required: false
+        type: string
+        default: role_arn
+      tf_workspace:
+        required: false
+        type: string
+        default: default
+    secrets:
+      aws_access_key_id:
+        required: true
+      aws_secret_access_key:
+        required: true
+      extra_env:
+        required: false
     outputs:
       terraform_plan:
         description: Terraform Plan
@@ -37,14 +57,22 @@ jobs:
     name: Terraform Plan
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.aws_access_key_id }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.aws_secret_access_key }}
+      TF_VAR_TARGET_DEPLOY_ENV: ${{ inputs.environment }}
+      TF_WORKSPACE: ${{ inputs.tf_workspace }}
     outputs:
       terraform_plan: ${{ steps.plan.outputs.stdout }}
     steps:
       - uses: actions/checkout@v2
 
-      - uses: hashicorp/setup-terraform@v1
+      - uses: hashicorp/setup-terraform@v2
         with:
             terraform_version: ${{ inputs.terraform_version }}
+
+      - name: Set dynamic environment variables
+        run: echo -e "${{ secrets.extra_env }}" >> $GITHUB_ENV
 
       - name: Terraform fmt
         id: fmt
@@ -53,7 +81,14 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform init
+        run: >-
+          terraform init -get=true
+          -upgrade=true
+          -input=false
+          -no-color
+          -backend-config="role_arn=${{ inputs.role_arn }}"
+          -backend-config="bucket=${{ inputs.state_bucket }}"
+          -backend-config="dynamodb_table=${{ inputs.state_dynamodb }}"
 
       - name: Terraform Validate
         id: validate
@@ -79,7 +114,7 @@ jobs:
           script: |
             const output = `
             \`\`\`\n
-              ${process.env.PLAN}
+            ${process.env.PLAN}
             \`\`\`
             `
 
