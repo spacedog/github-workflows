@@ -77,9 +77,9 @@ jobs:
       # Mask all secrets
       - name: Add masks
         run: |
-          echo "::add-mask::{{ secrets.aws_access_key_id }}
-          echo "::add-mask::{{ secrets.aws_secret_access_key }}
-          echo "{{ secrets.extra_env }}"
+          echo "::add-mask::${{ secrets.aws_access_key_id }}
+          echo "::add-mask::${{ secrets.aws_secret_access_key }}
+          echo "${{ secrets.extra_env }}"
 
       - uses: actions/checkout@v2
 
