@@ -79,7 +79,7 @@ jobs:
         run: |
           echo "::add-mask::${{ secrets.aws_access_key_id }}
           echo "::add-mask::${{ secrets.aws_secret_access_key }}
-          echo "${{ secrets.extra_env }}"
+          echo "${{ secrets.extra_env }}" | while read secret ; do echo -n "::add-mask::" ; echo $secret | cut -d= -f2- ; done
 
       - uses: actions/checkout@v2
 
