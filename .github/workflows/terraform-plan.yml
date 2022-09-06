@@ -102,7 +102,7 @@ jobs:
 
       - name: Terraform Init
         id: init
-        if: ! ${{ inputs.is_aws_backend }}
+        if: ${{ !inputs.is_aws_backend }}
         run: >-
           terraform init -get=true
           -upgrade=true
